@@ -55,6 +55,7 @@ def create_engine_with_dsn(user: str,
         f"UID={user}",
         f"PWD={password}",
         "Security=SSL",
+        f"CONNECTTIMEOUT={connect_timeout}",
     ]
 
     if ca_cert_path:
@@ -66,12 +67,12 @@ def create_engine_with_dsn(user: str,
     encoded_dsn = urllib.parse.quote_plus(dsn)
     url = f"ibm_db_sa:///?dsn={encoded_dsn}"
 
-    # You can tune pool settings and timeouts via create_engine() params and connect_args
+    # You can tune pool settings via create_engine() params
+    # Note: timeout is specified in the DSN string above as CONNECTTIMEOUT
     engine = create_engine(
         url,
         pool_size=5,
         max_overflow=10,
-        connect_args={"timeout": connect_timeout},
         future=True,  # use SQLAlchemy 1.4+ style
     )
     return engine
@@ -93,7 +94,7 @@ def create_engine_with_url_params(user: str,
     Example URL: ibm_db_sa://user:pwd@host:port/database?security=SSL&SSLServerCertificate=/path/ca.pem
     """
     base = f"ibm_db_sa://{urllib.parse.quote_plus(user)}:{urllib.parse.quote_plus(password)}@{host}:{port}/{database}"
-    params = {"security": "SSL"}
+    params = {"security": "SSL", "connecttimeout": str(connect_timeout)}
     if ca_cert_path:
         # param name as commonly used by ibm_db driver
         params["SSLServerCertificate"] = ca_cert_path
@@ -105,7 +106,6 @@ def create_engine_with_url_params(user: str,
         url,
         pool_size=5,
         max_overflow=10,
-        connect_args={"timeout": connect_timeout},
         future=True,
     )
     return engine
