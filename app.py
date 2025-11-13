@@ -50,12 +50,12 @@ def create_engine_with_dsn(user: str,
     dsn_attrs = [
         f"DATABASE={database}",
         f"HOSTNAME={host}",
-        f"PORT={port}",
+        f"PORT={str(port)}",
         "PROTOCOL=TCPIP",
         f"UID={user}",
         f"PWD={password}",
         "Security=SSL",
-        f"CONNECTTIMEOUT={connect_timeout}",
+        f"CONNECTTIMEOUT={str(connect_timeout)}",
     ]
 
     if ca_cert_path:
