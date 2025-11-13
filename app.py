@@ -62,13 +62,21 @@ def create_engine_with_dsn(user: str,
         # SSLServerCertificate points to the PEM file (CA certificate) used to verify the server cert
         dsn_attrs.append(f"SSLServerCertificate={ca_cert_path}")
 
-    dsn = ";".join(dsn_attrs)
-    # URL-encode the DSN and pass via the ?dsn=... query parameter
-    encoded_dsn = urllib.parse.quote_plus(dsn)
-    url = f"ibm_db_sa:///?dsn={encoded_dsn}"
-
+    # Build the URL with all SSL parameters in query string
+    url = f"ibm_db_sa://{urllib.parse.quote_plus(user)}:{urllib.parse.quote_plus(password)}@{host}:{port}/{database}"
+    
+    # Add SSL and timeout parameters as query string
+    params = {
+        "security": "SSL",
+        "connecttimeout": str(connect_timeout)
+    }
+    if ca_cert_path:
+        params["SSLServerCertificate"] = ca_cert_path
+    
+    qs = "&".join(f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in params.items())
+    url = url + "?" + qs
+    
     # You can tune pool settings via create_engine() params
-    # Note: timeout is specified in the DSN string above as CONNECTTIMEOUT
     engine = create_engine(
         url,
         pool_size=5,
